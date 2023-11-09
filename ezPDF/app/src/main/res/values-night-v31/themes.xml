@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.EzPDF" parent="android:Theme.Material.Light.NoActionBar">
+
+        <item name="android:windowLayoutInDisplayCutoutMode">default</item>
+        <item name="android:navigationBarColor">@color/transparent</item>
+        <item name="android:thumbTint">@android:color/system_accent1_500</item>
+
+        <item name="android:buttonCornerRadius">10dp</item>
+    </style>
+</resources>
