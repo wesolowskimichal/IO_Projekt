@@ -67,12 +67,15 @@ class MainActivity : ComponentActivity() {
         }
 
         currSelected = drawButton
+
     }
 //      change bg color of selected tool
     private fun setSelectedToolIndicator(selected:ImageButton, color: Int){
-        currSelected.setBackgroundColor(ContextCompat.getColor(this, R.color.transparent))
-        selected.setBackgroundColor(color)
+
+        currSelected.background.setTint(ContextCompat.getColor(this, R.color.transparent))
+        selected.background.setTint(ContextCompat.getColor(this, androidx.constraintlayout.widget.R.color.material_grey_300))
         currSelected = selected
+
     }
 
     private fun setDrawing() {
