@@ -40,22 +40,36 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
                 }
             field = value
         }
+    var strokeSize = 2f
+    var drawColor = Color.Black
     private var _pathType = PathType.FOLLOW
 
     private val _lines = mutableListOf<Line>()
     private val _circles = mutableListOf<Circle>()
 
     private val _touchTolerance = ViewConfiguration.get(context).scaledTouchSlop
-    private val _paint: Paint = Paint().apply {
-        color = Color.Black.toArgb()
+    private var _paint: Paint = Paint().apply {
+        color = drawColor.toArgb()
         isAntiAlias = true
         isDither = true
         style = Paint.Style.STROKE
-        strokeWidth = 2f
+        strokeWidth = strokeSize
         strokeCap = Paint.Cap.ROUND
         strokeJoin = Paint.Join.ROUND
     }
 
+//  !!! Obstawiam że tak się nie powinno robić, ale nie wiem jak to poprawnie zrobić :P
+    fun updatePaint(){
+        _paint = Paint().apply {
+            color = drawColor.toArgb()
+            isAntiAlias = true
+            isDither = true
+            style = Paint.Style.STROKE
+            strokeWidth = strokeSize
+            strokeCap = Paint.Cap.ROUND
+            strokeJoin = Paint.Join.ROUND
+        }
+    }
     private var _path = Path()
     private var _motionX = 0f
     private var _motionY = 0f

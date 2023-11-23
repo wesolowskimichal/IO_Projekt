@@ -1,18 +1,15 @@
 package com.example.ezpdf
 
-import android.app.Dialog
 import android.graphics.pdf.PdfDocument
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
-import android.util.TypedValue
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.annotation.RequiresApi
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import com.example.ezpdf.ezPDF.CanvasView
@@ -23,15 +20,9 @@ import java.io.IOException
 class MainActivity : ComponentActivity() {
     private lateinit var canvasView: CanvasView;
     private lateinit var currSelected:ImageButton
-    @RequiresApi(Build.VERSION_CODES.R)
-    override fun onCreate(savedInstanceState: Bundle?) {
-        val colorAccent = android.R.attr.colorAccent
-        val typedValue = TypedValue()
-        theme.resolveAttribute(colorAccent, typedValue, true)
-        val accentColor = typedValue.data
+    private var strokeSize = 2f
 
-        val transparentColor = ContextCompat.getColor(this, R.color.transparent)
-//        get user theme color
+    override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.mainlayout)
@@ -44,33 +35,90 @@ class MainActivity : ComponentActivity() {
         val circButton: ImageButton = findViewById(R.id.circ)
         circButton.setOnClickListener {
             setCirc()
-            setSelectedToolIndicator(circButton,accentColor)
+            setSelectedToolIndicator(circButton)
         }
 
         val rectButton: ImageButton = findViewById(R.id.rect)
         rectButton.setOnClickListener {
             setRect()
-            setSelectedToolIndicator(rectButton, accentColor)
+            setSelectedToolIndicator(rectButton)
 
         }
         val lineButton: ImageButton = findViewById(R.id.line)
         lineButton.setOnClickListener {
             setLine()
-            setSelectedToolIndicator(lineButton,accentColor)
+            setSelectedToolIndicator(lineButton)
 
         }
         val drawButton: ImageButton = findViewById(R.id.draw)
         drawButton.setOnClickListener {
             setDrawing()
-            setSelectedToolIndicator(drawButton,accentColor)
+            setSelectedToolIndicator(drawButton)
 
         }
+
+//        zmiana grubości pędzla
+        val sizeBar: SeekBar = findViewById(R.id.sb_size)
+        sizeBar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener{
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                if (seekBar != null) {
+                    strokeSize = seekBar.progress.toFloat()
+                    canvasView.strokeSize = strokeSize
+                    canvasView.updatePaint()
+                    Log.d("d","sSize: $strokeSize")
+                }
+            }
+        })
+
+
+        val colorButtons = arrayOf(
+            findViewById<Button>(R.id.color_black),
+            findViewById(R.id.color_white),
+            findViewById(R.id.color_cyan),
+            findViewById(R.id.color_yellow),
+            findViewById(R.id.color_magenta),
+            findViewById(R.id.color_red),
+            findViewById(R.id.color_blue),
+            findViewById(R.id.color_green),
+        )
+        val colors = arrayOf(
+            Color.Black,
+            Color.White,
+            Color.Cyan,
+            Color.Yellow,
+            Color.Magenta,
+            Color.Red,
+            Color.Blue,
+            Color.Green
+        )
+        fun handleColorChange(button:Button){
+            val i = colorButtons.indexOf(button)
+            canvasView.drawColor = colors[i]
+            canvasView.updatePaint()
+        }
+
+
+        for (bt in colorButtons){
+            bt.setOnClickListener{
+                handleColorChange(bt)
+            }
+        }
+
+
 
         currSelected = drawButton
 
     }
 //      change bg color of selected tool
-    private fun setSelectedToolIndicator(selected:ImageButton, color: Int){
+    private fun setSelectedToolIndicator(selected:ImageButton){
 
         currSelected.background.setTint(ContextCompat.getColor(this, R.color.transparent))
         selected.background.setTint(ContextCompat.getColor(this, androidx.constraintlayout.widget.R.color.material_grey_300))
@@ -80,6 +128,7 @@ class MainActivity : ComponentActivity() {
 
     private fun setDrawing() {
         canvasView.drawType = CanvasView.DrawType.DRAW
+        canvasView.strokeSize = strokeSize
     }
 
     private fun setCirc() {

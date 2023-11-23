@@ -15,4 +15,12 @@
     <color name="green_700">#689F38</color>
     <color name="trans_grey">#33333399</color>
     <color name="select_color">#33333355</color>
+
+<!--    draw colors-->
+    <color name="red">#f00</color>
+    <color name="green">#0f0</color>
+    <color name="blue">#00f</color>
+    <color name="cyan">#0ff</color>
+    <color name="magenta">#f0f</color>
+    <color name="yellow">#ff0</color>
 </resources>

@@ -125,6 +125,8 @@
             android:id="@+id/sb_size"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:max="100"
+            android:progress="2"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
@@ -162,47 +164,46 @@
                 android:text=""
                 android:theme="@style/ColorButton"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/color_teal"
+                app:layout_constraintEnd_toStartOf="@id/color_cyan"
                 app:layout_constraintStart_toEndOf="@+id/color_black"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <Button
-                android:id="@+id/color_teal"
+                android:id="@+id/color_cyan"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginStart="5dp"
-                android:backgroundTint="@color/teal_700"
-                android:text=""
+                android:backgroundTint="@color/cyan"
                 android:theme="@style/ColorButton"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/color_orange"
+                app:layout_constraintEnd_toStartOf="@id/color_yellow"
                 app:layout_constraintStart_toEndOf="@+id/color_white"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <Button
-                android:id="@+id/color_orange"
+                android:id="@+id/color_yellow"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginStart="5dp"
-                android:backgroundTint="@color/orange_700"
+                android:backgroundTint="@color/yellow"
                 android:text=""
                 android:theme="@style/ColorButton"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/color_pink"
-                app:layout_constraintStart_toEndOf="@+id/color_teal"
+                app:layout_constraintEnd_toStartOf="@id/color_magenta"
+                app:layout_constraintStart_toEndOf="@+id/color_cyan"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <Button
-                android:id="@+id/color_pink"
+                android:id="@+id/color_magenta"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginStart="5dp"
-                android:backgroundTint="@color/pink_500"
+                android:backgroundTint="@color/magenta"
                 android:text=""
                 android:theme="@style/ColorButton"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/color_red"
-                app:layout_constraintStart_toEndOf="@+id/color_orange"
+                app:layout_constraintStart_toEndOf="@+id/color_yellow"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <Button
@@ -210,12 +211,12 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginStart="5dp"
-                android:backgroundTint="@color/red_800"
+                android:backgroundTint="@color/red"
                 android:text=""
                 android:theme="@style/ColorButton"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/color_blue"
-                app:layout_constraintStart_toEndOf="@+id/color_pink"
+                app:layout_constraintStart_toEndOf="@+id/color_magenta"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <Button
@@ -223,7 +224,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginStart="5dp"
-                android:backgroundTint="@color/blue_700"
+                android:backgroundTint="@color/blue"
                 android:text=""
                 android:theme="@style/ColorButton"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -236,7 +237,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginStart="5dp"
-                android:backgroundTint="@color/green_700"
+                android:backgroundTint="@color/green"
                 android:text=""
                 android:theme="@style/ColorButton"
                 app:layout_constraintBottom_toBottomOf="parent"
