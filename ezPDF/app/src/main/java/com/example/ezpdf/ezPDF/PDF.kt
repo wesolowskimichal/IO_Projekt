@@ -3,8 +3,10 @@ package com.example.ezpdf.ezPDF
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
+import java.io.File
+import java.io.FileOutputStream
 
-public class PDF{
+class PDF{
     private lateinit var _document : PdfDocument
     private lateinit var _pageInfo: PdfDocument.PageInfo
     private lateinit var _page : PdfDocument.Page
@@ -12,12 +14,19 @@ public class PDF{
     private var _isPageOpened : Boolean = false
     private var _isDocumentCreated : Boolean = false;
 
+    init {
+        CreateDocument()
+    }
+
     fun CreateDocument() {
         _isDocumentCreated = true
         _document = PdfDocument()
     }
 
     fun CloseDocument() {
+        if(_isPageOpened) {
+            ClosePage()
+        }
         if(!_isDocumentCreated) {
             throw RuntimeException("ezPDF::PDF::Error: Cannot close not created document!")
         }
@@ -44,6 +53,10 @@ public class PDF{
 
     fun GetPage() : PdfDocument.Page {
         return _page;
+    }
+
+    fun SaveDocument(file: File) {
+        _document.writeTo(FileOutputStream(file))
     }
 
     fun GetPages() : MutableList<PdfDocument.PageInfo>? {

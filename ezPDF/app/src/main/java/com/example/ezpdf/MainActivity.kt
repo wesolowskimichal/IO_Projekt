@@ -13,20 +13,24 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import com.example.ezpdf.ezPDF.CanvasView
+import com.example.ezpdf.ezPDF.PDF
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
 class MainActivity : ComponentActivity() {
-    private lateinit var canvasView: CanvasView;
+    private lateinit var canvasView: CanvasView
     private lateinit var currSelected:ImageButton
+    private lateinit var pdf: PDF
     private var strokeSize = 2f
+    private var focused = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.mainlayout)
         canvasView = findViewById(R.id.canvasView)
+        pdf = PDF()
 
 
         val exportButton: Button = findViewById(R.id.exportButton)
@@ -56,6 +60,17 @@ class MainActivity : ComponentActivity() {
             setSelectedToolIndicator(drawButton)
 
         }
+
+        val newPageButton: ImageButton = findViewById(R.id.newPage)
+        newPageButton.setOnClickListener{
+            val canvas = pdf.GetPage().canvas
+            canvasView.draw(canvas)
+            pdf.ClosePage()
+            pdf.CreatePage(canvasView.width, canvasView.height)
+            canvasView.clear()
+        }
+
+
 
 //        zmiana grubości pędzla
         val sizeBar: SeekBar = findViewById(R.id.sb_size)
@@ -117,6 +132,16 @@ class MainActivity : ComponentActivity() {
         currSelected = drawButton
 
     }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            if(!focused) {
+                pdf.CreatePage(canvasView.width, canvasView.height)
+                focused = true
+            }
+        }
+    }
 //      change bg color of selected tool
     private fun setSelectedToolIndicator(selected:ImageButton){
 
@@ -125,6 +150,7 @@ class MainActivity : ComponentActivity() {
         currSelected = selected
 
     }
+
 
     private fun setDrawing() {
         canvasView.drawType = CanvasView.DrawType.DRAW
@@ -144,14 +170,32 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun exportToPDF() {
-        val document = PdfDocument()
+        val canvas = pdf.GetPage().canvas
+
+        // Draw the content of the CanvasView on the PDF page's canvas
+        canvasView.draw(canvas)
+
+        // Close the current PDF page
+        pdf.ClosePage()
+
+        // Create a file to save the PDF
         val title = findViewById<EditText>(R.id.et_title)
         var docName = title.text.toString()
-        if(docName.isBlank()){
+        if (docName.isBlank()) {
             docName = "untitled"
         }
+        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val file = File(downloadsDir, "$docName.pdf")
 
-        try {
+        // Save the PDF to the file
+        pdf.SaveDocument(file)
+
+        // Notify the user that the export is complete (you can use a Toast or any other UI element)
+        val t = Toast.makeText(this, "PDF Exported to ${file.absolutePath}", Toast.LENGTH_SHORT)
+        t.show()
+
+
+        /*try {
             // Create a new PDF page
             val pageInfo = PdfDocument.PageInfo.Builder(canvasView.width, canvasView.height, 1).create()
             val page = document.startPage(pageInfo)
@@ -183,7 +227,7 @@ class MainActivity : ComponentActivity() {
         } catch (e: IOException) {
             // Handle exceptions, e.g., when the file cannot be created
             e.printStackTrace()
-        }
+        }*/
     }
 
 }

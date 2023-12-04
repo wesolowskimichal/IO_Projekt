@@ -13,14 +13,17 @@ import android.view.ViewConfiguration
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import java.lang.Math.pow
+import com.example.ezpdf.ezPDF.figures.Figure
+import com.example.ezpdf.ezPDF.figures.Rectangle
+import com.example.ezpdf.ezPDF.figures.Circle
+import com.example.ezpdf.ezPDF.figures.Line
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
 
 class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     enum class DrawType {
-        DRAW, LINE, CIRCLE, RECTANGLE
+        DRAW, LINE, CIRCLE, RECTANGLE, EDIT
     }
 
     private enum class PathType {
@@ -44,8 +47,9 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     var drawColor = Color.Black
     private var _pathType = PathType.FOLLOW
 
-    private val _lines = mutableListOf<Line>()
-    private val _circles = mutableListOf<Circle>()
+    private val _figures = mutableListOf<Figure>()
+    private var _figIdx = -1
+    private var _figureEditLevel = false
 
     private val _touchTolerance = ViewConfiguration.get(context).scaledTouchSlop
     private var _paint: Paint = Paint().apply {
@@ -76,6 +80,17 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private var _currentX = 0f
     private var _currentY = 0f
 
+    fun clear() {
+        _figIdx = -1
+        _figures.clear()
+        if(::_bitmap.isInitialized) _bitmap.recycle()
+        _bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        _canvas = Canvas(_bitmap)
+        _canvas.drawColor(_bgcColor.toArgb())
+        invalidate()
+    }
+
+
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         if(::_bitmap.isInitialized) _bitmap.recycle()
@@ -85,30 +100,24 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     }
 
     private fun render(canvas: Canvas) {
-        // maybe paint is also needed
-        for(line in _lines) {
-            canvas.drawLine(line.start.x, line.start.y, line.end.x, line.end.y, line.paint)
-        }
-
-        for(circle in _circles) {
-            canvas.drawCircle(circle.start.x, circle.start.y, circle.radius, circle.paint)
+        canvas.drawBitmap(_bitmap, 0f, 0f, null)
+        for(figure in _figures) {
+            figure.render(_canvas)
         }
 
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+        render(canvas)
         when(drawType) {
-            DrawType.DRAW -> {
-                canvas.drawBitmap(_bitmap, 0f, 0f, null)
-            }
             DrawType.LINE -> {
                 canvas.drawLine(_currentX, _currentY, _motionX, _motionY, _paint)
             }
             DrawType.CIRCLE -> {
                 val r: Double = sqrt(
                     (_currentX - _motionX).toDouble().pow(2.0) + (_currentY - _motionY).toDouble()
-                    .pow(2.0)
+                        .pow(2.0)
                 )
                 canvas.drawCircle(_currentX, _currentY, r.toFloat(), _paint)
             }
@@ -129,8 +138,6 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
                     left = _motionX
                     right = _motionX + diffX
                 }
-
-
                 canvas.drawRect(
                     RectF(
                         left,
@@ -140,8 +147,8 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
                     ),
                     _paint)
             }
+            else -> {}
         }
-        render(canvas)
 
     }
 
@@ -157,17 +164,40 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     }
 
     private fun touchEnd() {
-        if(drawType == DrawType.LINE) {
-            _lines.add(Line(start = Offset(_currentX, _currentY), end= Offset(_motionX, _motionY), _paint))
+        when (drawType) {
+            DrawType.LINE -> {
+                _figures.add(Line(start = Offset(_currentX, _currentY), end= Offset(_motionX, _motionY), _paint))
+            }
+            DrawType.CIRCLE -> {
+                val r: Double = sqrt(
+                    (_currentX - _motionX).toDouble().pow(2.0) + (_currentY - _motionY).toDouble()
+                        .pow(2.0)
+                )
+                _figures.add(Circle(start = Offset(_currentX, _currentY), r.toFloat(), _paint))
+            }
+            DrawType.RECTANGLE -> {
+                val diffX = abs(_currentX - _motionX)
+                val diffY = abs(_motionY - _currentY)
+                var left = _currentX
+                var top = _currentY
+                var right = _currentX + diffX
+                var down = _currentY + diffY
+
+                if(_motionY < _currentY) {
+                    top = _motionY
+                    down = _motionY + diffY
+                }
+
+                if(_motionX < _currentX) {
+                    left = _motionX
+                    right = _motionX + diffX
+                }
+                _figures.add(Rectangle(RectF(left, top, right, down), _paint))
+            }
+            else -> {}
         }
-        else if(drawType == DrawType.CIRCLE) {
-            val r: Double = sqrt(
-                (_currentX - _motionX).toDouble().pow(2.0) + (_currentY - _motionY).toDouble()
-                    .pow(2.0)
-            )
-            _circles.add(Circle(start = Offset(_currentX, _currentY), r.toFloat(), _paint))
-        }
-         _path.reset()
+        _figureEditLevel = false
+        _path.reset()
     }
 
     private fun touchMove() {
@@ -185,7 +215,16 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
                 _currentX = _motionX
                 _currentY = _motionY
             }
-            _canvas.drawPath(_path, _paint)
+            if(drawType == DrawType.DRAW) {
+                _canvas.drawPath(_path, _paint)
+            }
+            if(_figIdx != -1) {
+                if(_figureEditLevel) {
+                    _figures[_figIdx].resize(_motionX, _motionY)
+                } else {
+                    _figures[_figIdx].moveTo(_motionX, _motionY)
+                }
+            }
         }
         invalidate()
     }
@@ -195,5 +234,18 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         _path.moveTo(_motionX, _motionY)
         _currentX = _motionX
         _currentY = _motionY
+        if(drawType == DrawType.EDIT) {
+            for (i in _figures.size - 1 downTo 0) {
+                val figure = _figures[i]
+                if(figure.checkBounds(_motionX, _motionY)) {
+                    _figureEditLevel = _figIdx == i
+                    _figIdx = i
+                    break
+                }
+            }
+        } else {
+            _figIdx = -1
+            _figureEditLevel = false
+        }
     }
 }
