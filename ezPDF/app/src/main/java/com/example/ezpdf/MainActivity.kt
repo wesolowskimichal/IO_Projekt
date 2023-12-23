@@ -1,6 +1,9 @@
 package com.example.ezpdf
 
+import android.app.Activity
+import android.content.Intent
 import android.graphics.pdf.PdfDocument
+import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
@@ -10,18 +13,23 @@ import android.widget.ImageButton
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
+import com.example.ezpdf.databinding.MainlayoutBinding
 import com.example.ezpdf.ezPDF.CanvasView
 import com.example.ezpdf.ezPDF.PDF
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.lang.Exception
 
 class MainActivity : ComponentActivity() {
     private lateinit var canvasView: CanvasView
     private lateinit var currSelected:ImageButton
     private lateinit var pdf: PDF
+
     private var strokeSize = 2f
     private var focused = false
 
@@ -31,6 +39,18 @@ class MainActivity : ComponentActivity() {
         setContentView(R.layout.mainlayout)
         canvasView = findViewById(R.id.canvasView)
         pdf = PDF()
+
+        // Registers a photo picker activity launcher in single-select mode.
+        val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            // Callback is invoked after the user selects a media item or closes the
+            // photo picker.
+            if (uri != null) {
+                Log.d("PhotoPicker", "Selected URI: $uri")
+
+            } else {
+                Log.d("PhotoPicker", "No media selected")
+            }
+        }
 
 
         val exportButton: Button = findViewById(R.id.exportButton)
@@ -68,6 +88,10 @@ class MainActivity : ComponentActivity() {
             pdf.ClosePage()
             pdf.CreatePage(canvasView.width, canvasView.height)
             canvasView.clear()
+        }
+        val addImageButton: ImageButton = findViewById(R.id.addImage)
+        addImageButton.setOnClickListener {
+                pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         }
 
 
@@ -229,5 +253,6 @@ class MainActivity : ComponentActivity() {
             e.printStackTrace()
         }*/
     }
+
 
 }
