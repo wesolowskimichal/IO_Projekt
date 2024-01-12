@@ -12,7 +12,10 @@ import android.view.View
 import android.view.ViewConfiguration
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.get
+import androidx.core.graphics.scale
 import com.example.ezpdf.ezPDF.figures.Figure
 import com.example.ezpdf.ezPDF.figures.Rectangle
 import com.example.ezpdf.ezPDF.figures.Circle
@@ -23,7 +26,7 @@ import kotlin.math.sqrt
 
 class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     enum class DrawType {
-        DRAW, LINE, CIRCLE, RECTANGLE, EDIT
+        DRAW, LINE, CIRCLE, RECTANGLE, EDIT, IMAGE
     }
 
     private enum class PathType {
@@ -43,8 +46,10 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
                 }
             field = value
         }
+    lateinit var image: Bitmap
     var strokeSize = 2f
     var drawColor = Color.Black
+    var imageScale = 100
     private var _pathType = PathType.FOLLOW
 
     private val _figures = mutableListOf<Figure>()
@@ -147,10 +152,17 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
                     ),
                     _paint)
             }
+            DrawType.IMAGE -> {
+
+                var newImg = image.copy(Bitmap.Config.ARGB_8888, true)
+                newImg = newImg.scale(imageScale, (imageScale * image.height) / image.width)
+                canvas.drawBitmap(newImg, _motionX, _motionY, Paint())
+            }
             else -> {}
         }
 
     }
+
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         _motionX = event!!.x
@@ -248,4 +260,6 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
             _figureEditLevel = false
         }
     }
+
+
 }

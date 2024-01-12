@@ -1,7 +1,10 @@
 package com.example.ezpdf
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import android.os.Bundle
@@ -17,22 +20,26 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
-import com.example.ezpdf.databinding.MainlayoutBinding
 import com.example.ezpdf.ezPDF.CanvasView
 import com.example.ezpdf.ezPDF.PDF
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
-import java.lang.Exception
-
+import java.io.InputStream
 class MainActivity : ComponentActivity() {
     private lateinit var canvasView: CanvasView
     private lateinit var currSelected:ImageButton
     private lateinit var pdf: PDF
+    private var bitmap: Bitmap? = null
 
     private var strokeSize = 2f
     private var focused = false
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
@@ -46,11 +53,19 @@ class MainActivity : ComponentActivity() {
             // photo picker.
             if (uri != null) {
                 Log.d("PhotoPicker", "Selected URI: $uri")
+                GlobalScope.launch {
+                    bitmap = loadBitmapFromUri(this@MainActivity, uri)
+
+                    // Now you can use the bitmap as needed
+                    bitmap?.let { setImage(it) }
+
+                }
 
             } else {
                 Log.d("PhotoPicker", "No media selected")
             }
         }
+
 
 
         val exportButton: Button = findViewById(R.id.exportButton)
@@ -91,7 +106,10 @@ class MainActivity : ComponentActivity() {
         }
         val addImageButton: ImageButton = findViewById(R.id.addImage)
         addImageButton.setOnClickListener {
+
                 pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                setSelectedToolIndicator(addImageButton)
+
         }
 
 
@@ -100,6 +118,8 @@ class MainActivity : ComponentActivity() {
         val sizeBar: SeekBar = findViewById(R.id.sb_size)
         sizeBar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener{
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                canvasView.imageScale = 100 + progress*10
+
 
             }
 
@@ -112,7 +132,7 @@ class MainActivity : ComponentActivity() {
                     strokeSize = seekBar.progress.toFloat()
                     canvasView.strokeSize = strokeSize
                     canvasView.updatePaint()
-                    Log.d("d","sSize: $strokeSize")
+//                    Log.d("d","sSize: $strokeSize")
                 }
             }
         })
@@ -192,7 +212,30 @@ class MainActivity : ComponentActivity() {
     private fun setLine() {
         canvasView.drawType = CanvasView.DrawType.LINE
     }
+    private fun setImage(img:Bitmap){
 
+        canvasView.drawType = CanvasView.DrawType.IMAGE
+        canvasView.image = img
+    }
+
+    suspend fun loadBitmapFromUri(context: Context, uri: Uri): Bitmap? {
+        return withContext(Dispatchers.IO) {
+            try {
+                // Open an input stream from the Uri
+                val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
+
+                if (inputStream != null) {
+                    // Decode the stream into a Bitmap
+                    BitmapFactory.decodeStream(inputStream)
+                } else {
+                    null
+                }
+            } catch (e: IOException) {
+                e.printStackTrace()
+                null
+            }
+        }
+    }
     private fun exportToPDF() {
         val canvas = pdf.GetPage().canvas
 
