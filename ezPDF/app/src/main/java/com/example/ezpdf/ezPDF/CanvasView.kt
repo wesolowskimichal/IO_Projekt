@@ -12,21 +12,20 @@ import android.view.View
 import android.view.ViewConfiguration
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toArgb
-import androidx.core.graphics.get
 import androidx.core.graphics.scale
 import com.example.ezpdf.ezPDF.figures.Figure
 import com.example.ezpdf.ezPDF.figures.Rectangle
 import com.example.ezpdf.ezPDF.figures.Circle
 import com.example.ezpdf.ezPDF.figures.Line
+import com.example.ezpdf.ezPDF.figures.Text
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
 
 class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     enum class DrawType {
-        DRAW, LINE, CIRCLE, RECTANGLE, EDIT, IMAGE
+        DRAW, LINE, CIRCLE, RECTANGLE, EDIT, IMAGE, TEXT
     }
 
     private enum class PathType {
@@ -48,8 +47,11 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         }
     lateinit var image: Bitmap
     var strokeSize = 2f
+    var myTextSize = 50f
     var drawColor = Color.Black
     var imageScale = 100
+    var textToDraw = ""
+    private var tmpTexToDraw = ""
     private var _pathType = PathType.FOLLOW
 
     private val _figures = mutableListOf<Figure>()
@@ -66,6 +68,16 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         strokeCap = Paint.Cap.ROUND
         strokeJoin = Paint.Join.ROUND
     }
+    private var _textPaint: Paint = Paint().apply {
+        color = drawColor.toArgb()
+        isAntiAlias = true
+        isDither = true
+        style = Paint.Style.FILL
+        strokeWidth = 3f
+        strokeCap = Paint.Cap.ROUND
+        strokeJoin = Paint.Join.ROUND
+        textSize = myTextSize
+    }
 
 //  !!! Obstawiam że tak się nie powinno robić, ale nie wiem jak to poprawnie zrobić :P
     fun updatePaint(){
@@ -77,6 +89,16 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
             strokeWidth = strokeSize
             strokeCap = Paint.Cap.ROUND
             strokeJoin = Paint.Join.ROUND
+        }
+        _textPaint= Paint().apply {
+            color = drawColor.toArgb()
+            isAntiAlias = true
+            isDither = true
+            style = Paint.Style.FILL
+            strokeWidth = 3f
+            strokeCap = Paint.Cap.ROUND
+            strokeJoin = Paint.Join.ROUND
+            textSize = myTextSize
         }
     }
     private var _path = Path()
@@ -156,7 +178,14 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
                 var newImg = image.copy(Bitmap.Config.ARGB_8888, true)
                 newImg = newImg.scale(imageScale, (imageScale * image.height) / image.width)
-                canvas.drawBitmap(newImg, _motionX, _motionY, Paint())
+                canvas.drawBitmap(newImg, _motionX, _motionY, _paint)
+
+            }
+            DrawType.TEXT -> {
+//                _textPaint.textSize = textSize
+                canvas.drawText(textToDraw, _motionX, _motionY, _textPaint)
+
+
             }
             else -> {}
         }
@@ -206,10 +235,20 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
                 }
                 _figures.add(Rectangle(RectF(left, top, right, down), _paint))
             }
+            DrawType.TEXT->{
+                tmpTexToDraw = textToDraw
+            }
+            DrawType.IMAGE->{
+
+            }
             else -> {}
         }
         _figureEditLevel = false
         _path.reset()
+    }
+    fun applyText(){
+
+        _figures.add(Text(tmpTexToDraw, Offset(_motionX,_motionY), _textPaint))
     }
 
     private fun touchMove() {

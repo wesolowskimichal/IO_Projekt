@@ -33,6 +33,16 @@
 
         app:layout_constraintTop_toBottomOf="@+id/ll_toolBar" />
 
+    <EditText
+        android:id="@+id/et_addText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:visibility="gone"
+        />
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/ll_toolBar"
         android:layout_width="0dp"
@@ -66,13 +76,15 @@
             android:id="@+id/bt_text"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:background="@color/transparent"
+            android:backgroundTint="@color/transparent"
             android:src="@drawable/text"
             android:theme="@style/ToolButton"
             app:layout_constraintEnd_toStartOf="@id/rect"
             app:layout_constraintStart_toEndOf="@+id/draw"
             app:layout_constraintTop_toTopOf="parent" />
-        <!--            android:backgroundTint="@color/transparent"-->
+
+
+
         <ImageButton
             android:id="@+id/rect"
             android:layout_width="50dp"

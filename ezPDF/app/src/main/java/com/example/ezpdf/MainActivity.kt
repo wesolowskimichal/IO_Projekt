@@ -1,15 +1,14 @@
 package com.example.ezpdf
 
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
@@ -20,6 +19,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
+import androidx.core.widget.doOnTextChanged
 import com.example.ezpdf.ezPDF.CanvasView
 import com.example.ezpdf.ezPDF.PDF
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -33,6 +33,7 @@ import java.io.InputStream
 class MainActivity : ComponentActivity() {
     private lateinit var canvasView: CanvasView
     private lateinit var currSelected:ImageButton
+    private lateinit var editText: EditText
     private lateinit var pdf: PDF
     private var bitmap: Bitmap? = null
 
@@ -46,6 +47,11 @@ class MainActivity : ComponentActivity() {
         setContentView(R.layout.mainlayout)
         canvasView = findViewById(R.id.canvasView)
         pdf = PDF()
+        editText = findViewById(R.id.et_addText)
+
+
+
+
 
         // Registers a photo picker activity launcher in single-select mode.
         val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -73,24 +79,28 @@ class MainActivity : ComponentActivity() {
 
         val circButton: ImageButton = findViewById(R.id.circ)
         circButton.setOnClickListener {
+            handleToolSwitch()
             setCirc()
             setSelectedToolIndicator(circButton)
         }
 
         val rectButton: ImageButton = findViewById(R.id.rect)
         rectButton.setOnClickListener {
+            handleToolSwitch()
             setRect()
             setSelectedToolIndicator(rectButton)
 
         }
         val lineButton: ImageButton = findViewById(R.id.line)
         lineButton.setOnClickListener {
+            handleToolSwitch()
             setLine()
             setSelectedToolIndicator(lineButton)
 
         }
         val drawButton: ImageButton = findViewById(R.id.draw)
         drawButton.setOnClickListener {
+            handleToolSwitch()
             setDrawing()
             setSelectedToolIndicator(drawButton)
 
@@ -98,6 +108,7 @@ class MainActivity : ComponentActivity() {
 
         val newPageButton: ImageButton = findViewById(R.id.newPage)
         newPageButton.setOnClickListener{
+            handleToolSwitch()
             val canvas = pdf.GetPage().canvas
             canvasView.draw(canvas)
             pdf.ClosePage()
@@ -107,10 +118,36 @@ class MainActivity : ComponentActivity() {
         val addImageButton: ImageButton = findViewById(R.id.addImage)
         addImageButton.setOnClickListener {
 
-                pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                setSelectedToolIndicator(addImageButton)
+            handleToolSwitch()
+            pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            setSelectedToolIndicator(addImageButton)
 
         }
+
+        editText.doOnTextChanged { _, _, _, _ ->
+            val txt = editText.text.toString()
+            canvasView.textToDraw = txt
+
+        }
+
+        editText.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus){
+                editText.visibility = View.GONE
+            }
+        }
+
+        val textButton: ImageButton = findViewById(R.id.bt_text)
+        textButton.setOnClickListener {
+
+            handleToolSwitch()
+            setSelectedToolIndicator(textButton)
+            setText()
+            editText.visibility = View.VISIBLE
+            editText.requestFocus()
+            showKeyboard(editText)
+        }
+
+
 
 
 
@@ -118,8 +155,6 @@ class MainActivity : ComponentActivity() {
         val sizeBar: SeekBar = findViewById(R.id.sb_size)
         sizeBar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener{
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                canvasView.imageScale = 100 + progress*10
-
 
             }
 
@@ -131,8 +166,9 @@ class MainActivity : ComponentActivity() {
                 if (seekBar != null) {
                     strokeSize = seekBar.progress.toFloat()
                     canvasView.strokeSize = strokeSize
+                    canvasView.imageScale = 100 + seekBar.progress*10
+                    canvasView.myTextSize = 50f + seekBar.progress
                     canvasView.updatePaint()
-//                    Log.d("d","sSize: $strokeSize")
                 }
             }
         })
@@ -192,9 +228,17 @@ class MainActivity : ComponentActivity() {
         currSelected.background.setTint(ContextCompat.getColor(this, R.color.transparent))
         selected.background.setTint(ContextCompat.getColor(this, androidx.constraintlayout.widget.R.color.material_grey_300))
         currSelected = selected
+        editText.visibility = View.GONE
+        canvasView.updatePaint()
+        editText.text.clear()
 
     }
+    private fun handleToolSwitch(){
+        if (canvasView.drawType == CanvasView.DrawType.TEXT){
+            canvasView.applyText()
+        }
 
+    }
 
     private fun setDrawing() {
         canvasView.drawType = CanvasView.DrawType.DRAW
@@ -217,6 +261,15 @@ class MainActivity : ComponentActivity() {
         canvasView.drawType = CanvasView.DrawType.IMAGE
         canvasView.image = img
     }
+    private fun setText(){
+        canvasView.drawType = CanvasView.DrawType.TEXT
+    }
+    private fun showKeyboard(view: View) {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+    }
+
+
 
     suspend fun loadBitmapFromUri(context: Context, uri: Uri): Bitmap? {
         return withContext(Dispatchers.IO) {
