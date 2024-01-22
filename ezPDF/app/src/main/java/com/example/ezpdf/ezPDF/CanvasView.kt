@@ -17,6 +17,7 @@ import androidx.core.graphics.scale
 import com.example.ezpdf.ezPDF.figures.Figure
 import com.example.ezpdf.ezPDF.figures.Rectangle
 import com.example.ezpdf.ezPDF.figures.Circle
+import com.example.ezpdf.ezPDF.figures.Image
 import com.example.ezpdf.ezPDF.figures.Line
 import com.example.ezpdf.ezPDF.figures.Text
 import kotlin.math.abs
@@ -25,7 +26,7 @@ import kotlin.math.sqrt
 
 class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     enum class DrawType {
-        DRAW, LINE, CIRCLE, RECTANGLE, EDIT, IMAGE, TEXT
+        DRAW, LINE, CIRCLE, RECTANGLE, EDIT, IMAGE, TEXT, NULL
     }
 
     private enum class PathType {
@@ -129,7 +130,7 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private fun render(canvas: Canvas) {
         canvas.drawBitmap(_bitmap, 0f, 0f, null)
         for(figure in _figures) {
-            figure.render(_canvas)
+            figure.render(canvas)
         }
 
     }
@@ -239,7 +240,11 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
                 tmpTexToDraw = textToDraw
             }
             DrawType.IMAGE->{
-
+                var newImg = image.copy(Bitmap.Config.ARGB_8888, true)
+                newImg = newImg.scale(imageScale, (imageScale * image.height) / image.width)
+                val imageFigure = Image(newImg, Offset(_currentX, _currentY), 1f, Paint())
+                _figures.add(imageFigure)
+                drawType = DrawType.NULL
             }
             else -> {}
         }
@@ -291,9 +296,11 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
                 if(figure.checkBounds(_motionX, _motionY)) {
                     _figureEditLevel = _figIdx == i
                     _figIdx = i
-                    break
+                    return
                 }
             }
+            _figIdx = -1
+            _figureEditLevel = false
         } else {
             _figIdx = -1
             _figureEditLevel = false

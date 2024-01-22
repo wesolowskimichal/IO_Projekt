@@ -241,8 +241,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun setDrawing() {
-        canvasView.drawType = CanvasView.DrawType.DRAW
-        canvasView.strokeSize = strokeSize
+        if(canvasView.drawType == CanvasView.DrawType.DRAW) {
+            canvasView.drawType = CanvasView.DrawType.EDIT
+        }else{
+            canvasView.drawType = CanvasView.DrawType.DRAW
+            canvasView.strokeSize = strokeSize
+        }
     }
 
     private fun setCirc() {

@@ -21,7 +21,9 @@ class Text(private var content:String, private var start: Offset, override var p
     }
 
     override fun checkBounds(posX: Float, posY: Float): Boolean {
-       return true
+        val textWidth = paint.measureText(content)
+        val textHeight = paint.textSize
+        return posX >= start.x && posX <= start.x + textWidth && posY >= start.y - textHeight && posY <= start.y
     }
 
 }
