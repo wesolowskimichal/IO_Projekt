@@ -147,6 +147,12 @@ class MainActivity : ComponentActivity() {
             showKeyboard(editText)
         }
 
+        val editButton: ImageButton = findViewById(R.id.bt_edit)
+        editButton.setOnClickListener {
+            handleToolSwitch()
+            setEdit()
+            setSelectedToolIndicator(editButton)
+        }
 
 
 
@@ -241,14 +247,16 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun setDrawing() {
-        if(canvasView.drawType == CanvasView.DrawType.DRAW) {
-            canvasView.drawType = CanvasView.DrawType.EDIT
-        }else{
-            canvasView.drawType = CanvasView.DrawType.DRAW
-            canvasView.strokeSize = strokeSize
-        }
+
+        canvasView.drawType = CanvasView.DrawType.DRAW
+        canvasView.strokeSize = strokeSize
+
     }
 
+    private fun setEdit(){
+        canvasView.drawType = CanvasView.DrawType.EDIT
+
+    }
     private fun setCirc() {
         canvasView.drawType = CanvasView.DrawType.CIRCLE
     }

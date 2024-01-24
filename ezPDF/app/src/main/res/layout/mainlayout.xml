@@ -85,6 +85,7 @@
 
 
 
+
         <ImageButton
             android:id="@+id/rect"
             android:layout_width="50dp"
@@ -128,8 +129,19 @@
             android:backgroundTint="@color/transparent"
             android:src="@drawable/add_image"
             android:theme="@style/ToolButton"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/bt_edit"
             app:layout_constraintStart_toEndOf="@+id/line"
+            app:layout_constraintTop_toTopOf="parent"
+            />
+        <ImageButton
+            android:id="@+id/bt_edit"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:backgroundTint="@color/transparent"
+            android:src="@drawable/drag_pan_24"
+            android:theme="@style/ToolButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/addImage"
             app:layout_constraintTop_toTopOf="parent"
             />
 
