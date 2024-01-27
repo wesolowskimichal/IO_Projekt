@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
         canvasView = findViewById(R.id.canvasView)
         pdf = PDF()
         editText = findViewById(R.id.et_addText)
-
+        val titleView = findViewById<EditText>(R.id.et_title)
 
 
 
@@ -89,7 +89,7 @@ class MainActivity : ComponentActivity() {
 
 
         val exportButton: Button = findViewById(R.id.exportButton)
-        exportButton.setOnClickListener { exportToPDF() }
+        exportButton.setOnClickListener { exportToPDF(titleView.text.toString()) }
 
         val circButton: ImageButton = findViewById(R.id.circ)
         circButton.setOnClickListener {
@@ -330,7 +330,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    private fun exportToPDF() {
+    private fun exportToPDF(fileName:String) {
         val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         if(!this::pdfCreator.isInitialized) {
             pdfCreator = PdfCreator(canvasView.width, canvasView.height)
@@ -349,8 +349,8 @@ class MainActivity : ComponentActivity() {
         pages.add(pdfCreator.createPage(figuresStreamCodes, images))
         pdfCreator.createDocument(pages)
         val res = pdfCreator.endDocument()
-        val file = File(downloadsDir, "asd.pdf")
-        val txt = File(downloadsDir, "asd.txt")
+        val file = File(downloadsDir, "${fileName}.pdf")
+        val txt = File(downloadsDir, "${fileName}.txt")
         val fileOutputStream = FileOutputStream(file)
         val fileOutputStream2 = FileOutputStream(txt)
 
@@ -362,12 +362,15 @@ class MainActivity : ComponentActivity() {
             bufferedWriter.write(res)
             bufferedWriter2.write(res)
             println("File saved successfully.")
+            Toast.makeText(this, "Zapisano w $downloadsDir", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             println("Error saving the file: ${e.message}")
         } finally {
             // Close the BufferedWriter and FileOutputStream
             bufferedWriter.close()
+            bufferedWriter2.close()
             fileOutputStream.close()
+            fileOutputStream2.close()
         }
         /*val canvas = pdf.GetPage().canvas
 
