@@ -18,18 +18,29 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doOnTextChanged
 import com.example.ezpdf.ezPDF.CanvasView
 import com.example.ezpdf.ezPDF.PDF
+import com.example.ezpdf.ezPDF.core.Page
+import com.example.ezpdf.ezPDF.core.PdfCreator
+import com.example.ezpdf.ezPDF.core.stream_codes.templates.StreamCode
+import com.example.ezpdf.ezPDF.figures.Image
+import com.example.ezpdf.ezPDF.figures.Line
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.BufferedWriter
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
+import java.io.OutputStreamWriter
+
 class MainActivity : ComponentActivity() {
     private lateinit var canvasView: CanvasView
     private lateinit var currSelected:ImageButton
@@ -39,6 +50,9 @@ class MainActivity : ComponentActivity() {
 
     private var strokeSize = 2f
     private var focused = false
+
+    private lateinit var pdfCreator: PdfCreator
+    val pages: MutableList<Page> = mutableListOf()
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -109,6 +123,21 @@ class MainActivity : ComponentActivity() {
         val newPageButton: ImageButton = findViewById(R.id.newPage)
         newPageButton.setOnClickListener{
             handleToolSwitch()
+            val figures = canvasView.getFigures()
+            val figuresStreamCodes: MutableList<StreamCode> = mutableListOf()
+            val images: MutableList<Image> = mutableListOf()
+            for(figure in figures) {
+                if(figure is Image) {
+                    images.add(figure)
+                } else {
+                    figuresStreamCodes.add(figure.convertToStreamCode())
+                    figuresStreamCodes.last().transpose(canvasView.width, canvasView.height)
+                }
+            }
+            if(!this::pdfCreator.isInitialized) {
+                pdfCreator = PdfCreator(canvasView.width, canvasView.height)
+            }
+            pages.add(pdfCreator.createPage(figuresStreamCodes, images))
             val canvas = pdf.GetPage().canvas
             canvasView.draw(canvas)
             pdf.ClosePage()
@@ -302,10 +331,62 @@ class MainActivity : ComponentActivity() {
         }
     }
     private fun exportToPDF() {
-        val canvas = pdf.GetPage().canvas
+        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        if(!this::pdfCreator.isInitialized) {
+            pdfCreator = PdfCreator(canvasView.width, canvasView.height)
+        }
+        val figures = canvasView.getFigures()
+        val figuresStreamCodes: MutableList<StreamCode> = mutableListOf()
+        val images: MutableList<Image> = mutableListOf()
+        for(figure in figures) {
+            if(figure is Image) {
+                images.add(figure)
+            } else {
+                figuresStreamCodes.add(figure.convertToStreamCode())
+                figuresStreamCodes.last().transpose(canvasView.width, canvasView.height)
+            }
+        }
+        pages.add(pdfCreator.createPage(figuresStreamCodes, images))
+        pdfCreator.createDocument(pages)
+        val res = pdfCreator.endDocument()
+        val file = File(downloadsDir, "asd.pdf")
+        val txt = File(downloadsDir, "asd.txt")
+        val fileOutputStream = FileOutputStream(file)
+        val fileOutputStream2 = FileOutputStream(txt)
+
+        // Create a BufferedWriter to write the content to the file
+        val bufferedWriter = BufferedWriter(OutputStreamWriter(fileOutputStream))
+        val bufferedWriter2 = BufferedWriter(OutputStreamWriter(fileOutputStream2))
+        try {
+            // Write the content of 'res' to the file
+            bufferedWriter.write(res)
+            bufferedWriter2.write(res)
+            println("File saved successfully.")
+        } catch (e: Exception) {
+            println("Error saving the file: ${e.message}")
+        } finally {
+            // Close the BufferedWriter and FileOutputStream
+            bufferedWriter.close()
+            fileOutputStream.close()
+        }
+        /*val canvas = pdf.GetPage().canvas
 
         // Draw the content of the CanvasView on the PDF page's canvas
         canvasView.draw(canvas)
+        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val f = File(downloadsDir, "TEST.png")
+
+        try {
+            val fileOutputStream = FileOutputStream(f)
+            val v = replaceWhiteWithTransparent(canvasView._pathBitmap, 255)
+            val stream = ByteArrayOutputStream()
+            val d = v?.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            Log.d("asdasdasdsadsadsda", stream.toByteArray().toString())
+            fileOutputStream.close()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+
 
         // Close the current PDF page
         pdf.ClosePage()
@@ -316,7 +397,6 @@ class MainActivity : ComponentActivity() {
         if (docName.isBlank()) {
             docName = "untitled"
         }
-        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         val file = File(downloadsDir, "$docName.pdf")
 
         // Save the PDF to the file
@@ -324,7 +404,7 @@ class MainActivity : ComponentActivity() {
 
         // Notify the user that the export is complete (you can use a Toast or any other UI element)
         val t = Toast.makeText(this, "PDF Exported to ${file.absolutePath}", Toast.LENGTH_SHORT)
-        t.show()
+        t.show()*/
 
 
         /*try {
@@ -362,5 +442,32 @@ class MainActivity : ComponentActivity() {
         }*/
     }
 
+    fun replaceWhiteWithTransparent(originalBitmap: Bitmap, threshold: Int): Bitmap? {
+        val width = originalBitmap.width
+        val height = originalBitmap.height
+
+        // Create a new Bitmap with alpha channel
+        val newBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        for (x in 0 until width) {
+            for (y in 0 until height) {
+                val pixel = originalBitmap.getPixel(x, y)
+
+                // Extract the RGB values
+                val red = pixel shr 16 and 0xFF
+                val green = pixel shr 8 and 0xFF
+                val blue = pixel and 0xFF
+
+                // Check if the pixel is white (you may want to adjust the threshold)
+                if (red >= threshold && green >= threshold && blue >= threshold) {
+                    // If white, set alpha to 0 (fully transparent)
+                    newBitmap.setPixel(x, y, Color(red, green, blue, 0).toArgb())
+                } else {
+                    // If not white, keep the original color
+                    newBitmap.setPixel(x, y, pixel)
+                }
+            }
+        }
+        return newBitmap
+    }
 
 }

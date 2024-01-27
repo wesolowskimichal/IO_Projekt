@@ -5,6 +5,12 @@ import android.graphics.Paint
 import android.graphics.RectF
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.blue
+import androidx.core.graphics.green
+import androidx.core.graphics.red
+import com.example.ezpdf.ezPDF.core.stream_codes.LineColor
+import com.example.ezpdf.ezPDF.core.stream_codes.TransparentRect
+import com.example.ezpdf.ezPDF.core.stream_codes.templates.StreamCode
 import kotlin.math.abs
 
 class Rectangle(private var _coordinates: RectF, override var paint: Paint): Figure {
@@ -34,6 +40,17 @@ class Rectangle(private var _coordinates: RectF, override var paint: Paint): Fig
             right = left.also { left = right}
         }
         _coordinates = RectF(left, top, right, down)
+    }
+
+    override fun convertToStreamCode(): StreamCode {
+        return TransparentRect(
+            _coordinates.left.toInt(),
+            _coordinates.bottom.toInt(),
+            _coordinates.width().toInt(),
+            _coordinates.height().toInt(),
+            paint.strokeWidth.toInt(),
+            LineColor(paint.color.red, paint.color.green, paint.color.blue)
+        )
     }
 
     override fun checkBounds(posX: Float, posY: Float): Boolean {

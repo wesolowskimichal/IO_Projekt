@@ -5,6 +5,12 @@ import android.graphics.Paint
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.blue
+import androidx.core.graphics.green
+import androidx.core.graphics.red
+import com.example.ezpdf.ezPDF.core.stream_codes.Line
+import com.example.ezpdf.ezPDF.core.stream_codes.LineColor
+import com.example.ezpdf.ezPDF.core.stream_codes.templates.StreamCode
 
 class Line(private var start: Offset, private var end: Offset, override var paint: Paint): Figure {
     private var _onHover = false
@@ -23,6 +29,17 @@ class Line(private var start: Offset, private var end: Offset, override var pain
 
     override fun resize(newX: Float, newY: Float) {
         end = Offset(newX, newY)
+    }
+
+    override fun convertToStreamCode(): StreamCode {
+        return Line(
+            start.x.toInt(),
+            start.y.toInt(),
+            end.x.toInt(),
+            end.y.toInt(),
+            LineColor(paint.color.red, paint.color.green, paint.color.blue),
+            paint.strokeWidth.toInt()
+        )
     }
 
     override fun checkBounds(posX: Float, posY: Float): Boolean {

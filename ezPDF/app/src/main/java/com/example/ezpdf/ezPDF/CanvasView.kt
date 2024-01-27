@@ -36,6 +36,8 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private val _bgcColor: Color = Color.White
     private lateinit var _canvas: Canvas
     private lateinit var _bitmap: Bitmap
+    private lateinit var _pathCanvas: Canvas
+    lateinit var _pathBitmap: Bitmap
 
     var drawType = DrawType.DRAW
         set(value) {
@@ -115,7 +117,15 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         _bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         _canvas = Canvas(_bitmap)
         _canvas.drawColor(_bgcColor.toArgb())
+        if(::_pathBitmap.isInitialized) _pathBitmap.recycle()
+        _pathBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        _pathCanvas = Canvas(_pathBitmap)
+        _pathCanvas.drawColor(_bgcColor.toArgb())
         invalidate()
+    }
+
+    fun getFigures():List<Figure> {
+        return _figures
     }
 
 
@@ -125,6 +135,10 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         _bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         _canvas = Canvas(_bitmap)
         _canvas.drawColor(_bgcColor.toArgb())
+        if(::_pathBitmap.isInitialized) _pathBitmap.recycle()
+        _pathBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        _pathCanvas = Canvas(_pathBitmap)
+        _pathCanvas.drawColor(_bgcColor.toArgb())
     }
 
     private fun render(canvas: Canvas) {
@@ -273,6 +287,7 @@ class CanvasView(context: Context, attrs: AttributeSet) : View(context, attrs) {
             }
             if(drawType == DrawType.DRAW) {
                 _canvas.drawPath(_path, _paint)
+                _pathCanvas.drawPath(_path, _paint)
             }
             if(_figIdx != -1) {
                 if(_figureEditLevel) {
