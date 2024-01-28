@@ -8,7 +8,6 @@ class PdfCreator(
     val height: Int
 ) {
     private var CODE = "%PDF-1.7\n"
-    private val _imgs: MutableList<com.example.ezpdf.ezPDF.core.stream_codes.Image> = mutableListOf()
 
     init {
         initPages()
@@ -16,15 +15,6 @@ class PdfCreator(
 
     fun initPages() {
         CODE += "${IdManager.getId} 0 obj << /Type /Catalog /Pages ${IdManager.getId} 0 R >> endobj\n"
-    }
-
-    fun addImg(img: Image) {
-        _imgs.add(com.example.ezpdf.ezPDF.core.stream_codes.Image(
-            IdManager.getId,
-            img.position.x.toInt(),
-            img.position.y.toInt(),
-            img.image
-        ))
     }
 
     fun createDocument(pages: List<Page>) {
@@ -52,24 +42,13 @@ class PdfCreator(
        return CODE
    }
 
-    fun createPage(figures: List<StreamCode>, images: List<Image>? = null): Page {
+    fun createPage(figures: List<StreamCode>): Page {
         val id = IdManager.getId
         val parent = Parent(2)
         val resource = Resource(IdManager.getId)
-        val streamImages: MutableList<com.example.ezpdf.ezPDF.core.stream_codes.Image> = mutableListOf()
-        if (images != null) {
-            for(image in images) {
-                streamImages.add(com.example.ezpdf.ezPDF.core.stream_codes.Image(
-                    IdManager.getId,
-                    image.position.x.toInt(),
-                    image.position.y.toInt(),
-                    image.image
-                ))
-            }
-        }
         val stream = Stream(figures)
         val content = Content(IdManager.getId, stream.size)
 
-        return Page(id, parent, resource, content, stream, streamImages)
+        return Page(id, parent, resource, content, stream)
     }
 }

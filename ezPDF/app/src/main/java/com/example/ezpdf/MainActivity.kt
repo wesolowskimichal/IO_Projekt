@@ -337,16 +337,12 @@ class MainActivity : ComponentActivity() {
         }
         val figures = canvasView.getFigures()
         val figuresStreamCodes: MutableList<StreamCode> = mutableListOf()
-        val images: MutableList<Image> = mutableListOf()
         for(figure in figures) {
-            if(figure is Image) {
-                images.add(figure)
-            } else {
-                figuresStreamCodes.add(figure.convertToStreamCode())
-                figuresStreamCodes.last().transpose(canvasView.width, canvasView.height)
-            }
+            figuresStreamCodes.add(figure.convertToStreamCode())
+            figuresStreamCodes.last().transpose(canvasView.width, canvasView.height)
+
         }
-        pages.add(pdfCreator.createPage(figuresStreamCodes, images))
+        pages.add(pdfCreator.createPage(figuresStreamCodes))
         pdfCreator.createDocument(pages)
         val res = pdfCreator.endDocument()
         val file = File(downloadsDir, "${fileName}.pdf")

@@ -6,7 +6,6 @@ import com.example.ezpdf.ezPDF.core.stream_codes.templates.StreamCode
 import java.io.ByteArrayOutputStream
 
 class Image(
-    val id: Int,
     override var x: Int,
     override var y: Int,
     val img: Bitmap
@@ -35,20 +34,18 @@ class Image(
     }
 
     override fun toString(): String {
-        return "$id 0 obj\n" +
-                "<<\n" +
-                "/Type /XObject\n" +
-                "/Subtype /Image\n" +
-                "/Width ${img.width}\n" +
-                "/Height ${img.height}\n" +
-                "/ColorSpace /DeviceRGB\n" +
-                "/BitsPerComponent 8\n" +
-                "/Filter /ASCIIHexDeCode\n" +// Compression method (JPEG)
-                "/Length 99999\n" +// Length of the image data
-                ">>\n" +
-                "stream\n" +
-                "${bitmapToAsciiHex(img)}\n" +// Binary image data (JPEG, PNG, etc.)
-                "endstream\n" +
-                "endobj\n"
+        val encodedImg = bitmapToAsciiHex(img)
+        return "q\n"+
+                "${img.width} 0 0 ${img.height} ${x} ${y} cm"+
+                "BI\n" +
+                "/W ${img.width}\n" +
+                "/H ${img.height}\n" +
+                "/CS /RGB\n" +
+                "/BPC 8\n" +
+                "/F /ASCIIHexDecode\n" +
+                "ID\n" +
+                "$encodedImg\n" +
+                "EI\n" +
+                "Q\n"
     }
 }
