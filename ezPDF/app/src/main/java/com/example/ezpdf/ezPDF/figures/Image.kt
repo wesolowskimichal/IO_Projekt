@@ -6,6 +6,7 @@ import android.graphics.Paint
 import androidx.compose.ui.geometry.Offset
 import androidx.core.graphics.scale
 import com.example.ezpdf.ezPDF.CanvasView
+import com.example.ezpdf.ezPDF.core.stream_codes.Image
 import com.example.ezpdf.ezPDF.core.stream_codes.templates.StreamCode
 import kotlin.math.abs
 
@@ -34,7 +35,7 @@ class Image(
     }
 
     override fun convertToStreamCode(): StreamCode {
-        TODO("Not yet implemented")
+        return Image(position.x.toInt(), position.y.toInt(), image)
     }
 
     override fun checkBounds(posX: Float, posY: Float): Boolean {

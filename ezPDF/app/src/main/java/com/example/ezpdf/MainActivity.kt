@@ -137,7 +137,7 @@ class MainActivity : ComponentActivity() {
             if(!this::pdfCreator.isInitialized) {
                 pdfCreator = PdfCreator(canvasView.width, canvasView.height)
             }
-            pages.add(pdfCreator.createPage(figuresStreamCodes, images))
+            pages.add(pdfCreator.createPage(figuresStreamCodes))
             val canvas = pdf.GetPage().canvas
             canvasView.draw(canvas)
             pdf.ClosePage()
